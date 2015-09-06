@@ -32,38 +32,6 @@ import (
 	"os"
 )
 
-// Severity indicates the severity of a log message.
-type Severity int
-
-const (
-	SeverityDebug   Severity = iota // Debugging only
-	SeverityInfo                    // Informational
-	SeverityWarning                 // Warning that might be recoverable
-	SeverityError                   // Requires intervention
-	SeverityFatal                   // Program will terminate
-)
-
-var (
-	MinSeverity = SeverityInfo
-)
-
-// String implements the String interface.
-func (s Severity) String() string {
-	switch s {
-	case SeverityDebug:
-		return "debug"
-	case SeverityInfo:
-		return "info"
-	case SeverityWarning:
-		return "warn"
-	case SeverityError:
-		return "error"
-	case SeverityFatal:
-		return "fatal"
-	}
-	return fmt.Sprintf("unknown %d", s)
-}
-
 // Message contains all of the log message information.
 // Note that *Message implements the error interface.
 type Message struct {

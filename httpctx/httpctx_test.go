@@ -14,7 +14,7 @@ func Test1(t *testing.T) {
 	stack := httpctx.Use(middleware1, middleware2)
 	assert.NotNil(stack)
 
-	http.Handle("/api/whatever", stack.Then(doWhateverHandler))
+	http.Handle("/api/whatever", stack.Handle(doWhateverHandler))
 }
 
 var doWhateverHandler = httpctx.HandlerFunc(doWhatever)

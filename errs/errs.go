@@ -7,7 +7,7 @@ import (
 
 // Common errors
 var (
-	NotImplemented = errorImpl{"not implemented", http.StatusNotImplemented}
+	NotImplemented = New("not implemented", http.StatusNotImplemented)
 )
 
 // Error is an error interface with additional diagnostic information.
