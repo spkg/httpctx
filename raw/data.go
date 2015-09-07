@@ -20,7 +20,7 @@ import (
 
 // Maximum size we are prepared to read from a HTTP client.
 // Anything this size or larger gets discarded.
-var MaxLen = 1024 * 1024 * 4
+var MaxLen = 1024 * 1024 * 16
 
 // Content encodings
 const (
@@ -71,6 +71,65 @@ func (data *Data) ReadRequest(ctx context.Context, r *http.Request) error {
 				log.WithContext(ctx),
 				log.WithError(err),
 				log.WithBadRequest())
+		}
+		data.Content = buf
+	} else {
+		reader := io.LimitReader(r.Body, int64(MaxLen))
+		content, err := ioutil.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+		if len(content) >= MaxLen {
+			return log.Warn("max size exceeded",
+				log.WithContext(ctx),
+				log.WithBadRequest(),
+				log.WithValue("MaxLen", MaxLen))
+		}
+		data.Content = content
+	}
+
+	// The HTTP specification does not mention Content-Encoding for
+	// requests, but sometimes it is handy to allow the client to do
+	// so.
+	if ce := r.Header.Get("Content-Encoding"); ce != "" {
+		data.ContentEncoding = ce
+		data.UncompressedLength = 0 // not known
+	} else {
+		data.UncompressedLength = len(data.Content)
+		data.ContentEncoding = ceIdentity
+	}
+
+	data.ContentType = r.Header.Get("Content-Type")
+	if data.ContentType == "" {
+		data.ContentType = "application/octet-stream"
+	}
+	return nil
+}
+
+// ReadRequest reads the data from the request into the raw.Data.
+func (data *Data) ReadResponse(ctx context.Context, r *http.Response) error {
+	if cl := r.Header.Get("Content-Length"); cl != "" {
+		v, err := strconv.ParseInt(cl, 10, 64)
+		if err != nil || v < 0 {
+			return log.Warn("invalid content-length",
+				log.WithValue("content-length", cl),
+				log.WithContext(ctx))
+		}
+
+		if v >= int64(MaxLen) {
+			return log.Warn("max length excceeded",
+				log.WithContext(ctx),
+				log.WithBadRequest(),
+				log.WithValue("MaxLen", MaxLen))
+		}
+
+		buf := make([]byte, v)
+
+		_, err = io.ReadFull(r.Body, buf)
+		if err != nil {
+			return log.Warn("cannot read content",
+				log.WithContext(ctx),
+				log.WithError(err))
 		}
 		data.Content = buf
 	} else {
