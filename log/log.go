@@ -38,7 +38,7 @@ type Message struct {
 	Severity   Severity
 	Text       string
 	Parameters []Parameter
-	Context    context.Context
+	Context    []Parameter
 	Err        error
 	StatusCode int
 }
@@ -56,19 +56,19 @@ func (m *Message) apply(opts []func(*Message)) {
 	for _, opt := range opts {
 		opt(m)
 	}
-	for data := fromContext(m.Context); data != nil; data = data.Prev {
-		m.Parameters = append(m.Parameters, Parameter{data.Name, data.Value})
-	}
 }
 
 // Fprint prints the log Text Message to the writer w.
 func (m *Message) Fprint(w io.Writer) {
+	// append parameters and context to form one larger list
+	parameters := append(m.Parameters, m.Context...)
+
 	// TODO: more sanitizing of parameter values, particularly
 	// strings as they might be malicious client input
-	switch len(m.Parameters) {
+	switch len(parameters) {
 	case 0, 1, 2:
 		fmt.Fprintf(w, "%s: %s", m.Severity, m.Text)
-		for _, param := range m.Parameters {
+		for _, param := range parameters {
 			switch v := param.Value.(type) {
 			case string:
 				fmt.Fprintf(w, ", %s=%q", param.Name, v)
@@ -85,7 +85,7 @@ func (m *Message) Fprint(w io.Writer) {
 		fmt.Fprintf(w, "\n")
 	default:
 		fmt.Fprintf(w, "%s: %s\n", m.Severity, m.Text)
-		for _, param := range m.Parameters {
+		for _, param := range parameters {
 			switch v := param.Value.(type) {
 			case string:
 				fmt.Fprintf(w, "    %s=%q\n", param.Name, v)
@@ -128,7 +128,9 @@ func WithValue(name string, value interface{}) func(*Message) {
 // WithContext sets the context for the log message.
 func WithContext(ctx context.Context) func(*Message) {
 	return func(m *Message) {
-		m.Context = ctx
+		for data := fromContext(ctx); data != nil; data = data.Prev {
+			m.Context = append(m.Context, Parameter{data.Name, data.Value})
+		}
 	}
 }
 
@@ -186,7 +188,7 @@ func Info(text string, opts ...func(*Message)) *Message {
 
 // Err logs a message based on an error value. The default
 // severity is error, but this can be overridden to a different
-// value with the WithValue() function.
+// value with the WithSeverity() function.
 func Err(err error, opts ...func(*Message)) *Message {
 	m := &Message{
 		Severity:   SeverityError,

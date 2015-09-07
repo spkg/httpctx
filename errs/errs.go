@@ -10,11 +10,14 @@ var (
 	NotImplemented = New("not implemented", http.StatusNotImplemented)
 )
 
-// Error is an error interface with additional diagnostic information.
+// Error is an error interface with a HTTP status code.
+// This can be useful for providing a hint to the caller
+// of an appropriate HTTP error code to be sent to any
+// HTTP client that might have initiated the request.
 type Error interface {
 	error
 
-	// StatusCode returns a HTTP status code associated
+	// Status returns a HTTP status code associated
 	// with this error.
 	StatusCode() int
 }
@@ -22,6 +25,7 @@ type Error interface {
 type errorImpl struct {
 	message    string
 	statusCode int
+	code       string
 }
 
 // Error implements the error interface.
