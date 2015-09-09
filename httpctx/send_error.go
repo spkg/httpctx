@@ -52,8 +52,8 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 		var b []byte
 
 		// if the error object can marshal itself, let it do so
-		if marshaler, ok := err.(json.Marshaler); ok {
-			b, _ := json.Marshal(err)
+		if _, ok := err.(json.Marshaler); ok {
+			b, _ = json.Marshal(err)
 		} else {
 			// the error object does not know how to marshal itself,
 			// so put the relevant information into a map and marshal
@@ -70,7 +70,7 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 				resp["error"]["code"] = code
 			}
 
-			b, _ := json.Marshal(resp)
+			b, _ = json.Marshal(resp)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
