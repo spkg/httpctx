@@ -24,14 +24,7 @@ package httpctx // import "sp.com.au/exp/httpctx"
 import (
 	"golang.org/x/net/context"
 	"net/http"
-	"time"
 )
-
-// Timeout is used by the NewContext function. If Timeout is set
-// to a non-zero value, then the NewContext function will create a
-// context.Context that has a timeout. If Timeout is zero, then
-// NewContext will create a context.Context without no timeout.
-var Timeout time.Duration = time.Minute
 
 // NewContext creates a new context.Context for the HTTP request and
 // a cancel function to call when the HTTP request is finished. The context's
@@ -47,22 +40,17 @@ func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (co
 		ctx = context.Background()
 	}
 
-	if Timeout == 0 {
-		// create a context without a timeout
-		ctx, cancelFunc = context.WithCancel(ctx)
-	} else {
-		// create a context with a timeout
-		ctx, cancelFunc = context.WithTimeout(ctx, Timeout)
-	}
+	// create a context without a timeout
+	ctx, cancelFunc = context.WithCancel(ctx)
 
 	if closeNotifier, ok := w.(http.CloseNotifier); ok {
 		go func() {
 			select {
 			case <-closeNotifier.CloseNotify():
 				cancelFunc()
-				break
+				return
 			case <-ctx.Done():
-				break
+				return
 			}
 		}()
 	}
