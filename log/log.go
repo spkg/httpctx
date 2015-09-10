@@ -30,11 +30,17 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
+)
+
+const (
+	timeFormat = "2006-01-02 15:04:05 -0700"
 )
 
 // Message contains all of the log message information.
 // Note that *Message implements the error interface.
 type Message struct {
+	Timestamp  time.Time
 	Severity   Severity
 	Text       string
 	Parameters []Parameter
@@ -61,13 +67,18 @@ func (m *Message) apply(opts []func(*Message)) {
 // Fprint prints the log Text Message to the writer w.
 func (m *Message) Fprint(w io.Writer) {
 	// append parameters and context to form one larger list
-	parameters := append(m.Parameters, m.Context...)
+	parameters := make([]Parameter, 0, len(m.Parameters)+len(m.Context)+1)
+	parameters = append(parameters, m.Parameters...)
+	if m.Err != nil {
+		parameters = append(parameters, Parameter{"error", m.Err.Error()})
+	}
+	parameters = append(parameters, m.Context...)
 
 	// TODO: more sanitizing of parameter values, particularly
 	// strings as they might be malicious client input
 	switch len(parameters) {
-	case 0, 1, 2:
-		fmt.Fprintf(w, "%s: %s", m.Severity, m.Text)
+	case 0, 1, 2, 3, 4:
+		fmt.Fprintf(w, "%s %-5s %s", m.Timestamp.Format(timeFormat), m.Severity, m.Text)
 		for _, param := range parameters {
 			switch v := param.Value.(type) {
 			case string:
@@ -165,8 +176,9 @@ func WithBadRequest() func(*Message) {
 // Debug logs a debug severity message.
 func Debug(text string, opts ...func(*Message)) *Message {
 	m := &Message{
-		Severity: SeverityDebug,
-		Text:     text,
+		Timestamp: time.Now(),
+		Severity:  SeverityDebug,
+		Text:      text,
 	}
 	m.StatusCode = http.StatusOK
 	m.apply(opts)
@@ -177,8 +189,9 @@ func Debug(text string, opts ...func(*Message)) *Message {
 // Info logs an info severity message.
 func Info(text string, opts ...func(*Message)) *Message {
 	m := &Message{
-		Severity: SeverityInfo,
-		Text:     text,
+		Timestamp: time.Now(),
+		Severity:  SeverityInfo,
+		Text:      text,
 	}
 	m.StatusCode = http.StatusOK
 	m.apply(opts)
@@ -191,6 +204,7 @@ func Info(text string, opts ...func(*Message)) *Message {
 // value with the WithSeverity() function.
 func Err(err error, opts ...func(*Message)) *Message {
 	m := &Message{
+		Timestamp:  time.Now(),
 		Severity:   SeverityError,
 		Text:       err.Error(),
 		StatusCode: http.StatusInternalServerError,
@@ -209,6 +223,7 @@ func Err(err error, opts ...func(*Message)) *Message {
 // Warn logs a warning severity message.
 func Warn(text string, opts ...func(*Message)) *Message {
 	m := &Message{
+		Timestamp:  time.Now(),
 		Severity:   SeverityError,
 		Text:       text,
 		StatusCode: http.StatusInternalServerError,
@@ -221,6 +236,7 @@ func Warn(text string, opts ...func(*Message)) *Message {
 // Error logs an error severity message.
 func Error(text string, opts ...func(*Message)) *Message {
 	m := &Message{
+		Timestamp:  time.Now(),
 		Severity:   SeverityError,
 		Text:       text,
 		StatusCode: http.StatusInternalServerError,
