@@ -166,9 +166,7 @@ func (data *Data) ReadResponse(ctx context.Context, r *http.Response) error {
 }
 
 // WriteResponse writes the contents to the client as a response.
-func (data *Data) WriteResponse(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	// TODO: look at "Accept" header.
-
+func (data *Data) WriteResponse(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// TODO: this is a very naive handling of the Accept-Encoding
 	// header. In particular it does not handle deflate;q=0, which is
 	// a valid way of saying that deflate is not acceptable.
@@ -178,9 +176,7 @@ func (data *Data) WriteResponse(ctx context.Context, w http.ResponseWriter, r *h
 			// have to decompress before sending
 			err := data.Decompress()
 			if err != nil {
-				// TODO: not returning to user, should log message and send
-				// error to client
-				panic("cannot decompress")
+				return err
 			}
 		}
 	}
@@ -190,23 +186,32 @@ func (data *Data) WriteResponse(ctx context.Context, w http.ResponseWriter, r *h
 		w.Header().Del("Content-Type")
 		w.Header().Del("Content-Encoding")
 		w.WriteHeader(http.StatusNoContent)
-		return
+		return nil
 	}
 
 	if data.IsCompressed() {
 		w.Header().Set("Content-Encoding", data.ContentEncoding)
+	} else {
+		w.Header().Del("Content-Encoding")
 	}
 	w.Header().Set("Content-Type", data.ContentType)
 	w.Header().Set("Content-Length", strconv.Itoa(len(data.Content)))
 	n, err := w.Write(data.Content)
 	if err != nil {
-		log.Err(err, log.WithSeverity(log.SeverityWarning))
+		// Failed to write, but do not return an error code, as there
+		// is no way to return an error message to the client after
+		// writing has started.
+		log.Warn("cannot write response",
+			log.WithError(err),
+			log.WithContext(ctx))
 	}
 	if n != len(data.Content) {
 		log.Warn("not all bytes sent",
 			log.WithValue("expected", len(data.Content)),
-			log.WithValue("actual", n))
+			log.WithValue("actual", n),
+			log.WithContext(ctx))
 	}
+	return nil
 }
 
 func (data *Data) Decompress() error {
