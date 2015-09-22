@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	timeFormat = "2006-01-02 15:04:05 -0700"
+	timeFormat = "2006-01-02T15:04:05-0700"
 )
 
 // Message contains all of the log message information.
@@ -57,16 +57,31 @@ type Parameter struct {
 	Value interface{}
 }
 
-// apply applies all of the option functions to the message. It also
-// adds any information from a
-func (m *Message) apply(opts []func(*Message)) {
+func newMessage(severity Severity, text string) *Message {
+	m := &Message{
+		Timestamp:  time.Now(),
+		Severity:   severity,
+		Text:       text,
+		StatusCode: http.StatusInternalServerError,
+	}
+	return m
+}
+
+func (m *Message) applyOpt(opt func(*Message)) *Message {
+	opt(m)
+	return m
+}
+
+// applyOpts applies all of the option functions to the message.
+func (m *Message) applyOpts(opts []func(*Message)) *Message {
 	for _, opt := range opts {
 		opt(m)
 	}
+	return m
 }
 
-// Fprint prints the log Text Message to the writer w.
-func (m *Message) Fprint(w io.Writer) {
+// WriteTo prints the log Text Message to the writer w.
+func (m *Message) WriteTo(w io.Writer) {
 	// append parameters and context to form one larger list
 	parameters := make([]Parameter, 0, len(m.Parameters)+len(m.Context)+1)
 	parameters = append(parameters, m.Parameters...)
@@ -116,7 +131,7 @@ func (m *Message) Fprint(w io.Writer) {
 
 // Print prints the log Text Message to standard output.
 var Print func(m *Message) = func(m *Message) {
-	m.Fprint(os.Stdout)
+	m.WriteTo(os.Stdout)
 }
 
 func doPrint(m *Message) {
@@ -130,10 +145,42 @@ func (m *Message) Error() string {
 	return m.Text
 }
 
-// WithValue sets a parameter with a name and a value.
-func WithValue(name string, value interface{}) func(*Message) {
+// Debug logs a debug severity message.
+func Debug(text string, opts ...func(*Message)) *Message {
+	m := newMessage(SeverityDebug, text)
+	m.applyOpts(opts)
+	doPrint(m)
+	return m
+}
+
+// Info logs an info severity message.
+func Info(text string, opts ...func(*Message)) *Message {
+	m := newMessage(SeverityInfo, text)
+	m.applyOpts(opts)
+	doPrint(m)
+	return m
+}
+
+// Warn logs a warning severity message.
+func Warn(text string, opts ...func(*Message)) *Message {
+	m := newMessage(SeverityWarning, text)
+	m.applyOpts(opts)
+	doPrint(m)
+	return m
+}
+
+// Error logs an error severity message.
+func Error(text string, opts ...func(*Message)) *Message {
+	m := newMessage(SeverityError, text)
+	m.applyOpts(opts)
+	doPrint(m)
+	return m
+}
+
+// WithError sets the error associated with the log message.
+func WithError(err error) func(*Message) {
 	return func(m *Message) {
-		m.Parameters = append(m.Parameters, Parameter{name, value})
+		m.Err = err
 	}
 }
 
@@ -146,10 +193,10 @@ func WithContext(ctx context.Context) func(*Message) {
 	}
 }
 
-// WithError sets the error associated with the log message.
-func WithError(err error) func(*Message) {
+// WithValue sets a parameter with a name and a value.
+func WithValue(name string, value interface{}) func(*Message) {
 	return func(m *Message) {
-		m.Err = err
+		m.Parameters = append(m.Parameters, Parameter{name, value})
 	}
 }
 
@@ -168,81 +215,14 @@ func WithStatusCode(code int) func(*Message) {
 	}
 }
 
-func WithBadRequest() func(*Message) {
+func WithStatusBadRequest() func(*Message) {
 	return func(m *Message) {
 		m.StatusCode = http.StatusBadRequest
 	}
 }
 
-// Debug logs a debug severity message.
-func Debug(text string, opts ...func(*Message)) *Message {
-	m := &Message{
-		Timestamp: time.Now(),
-		Severity:  SeverityDebug,
-		Text:      text,
+func WithStatusUnauthorized() func(*Message) {
+	return func(m *Message) {
+		m.StatusCode = http.StatusUnauthorized
 	}
-	m.StatusCode = http.StatusOK
-	m.apply(opts)
-	doPrint(m)
-	return m
-}
-
-// Info logs an info severity message.
-func Info(text string, opts ...func(*Message)) *Message {
-	m := &Message{
-		Timestamp: time.Now(),
-		Severity:  SeverityInfo,
-		Text:      text,
-	}
-	m.StatusCode = http.StatusOK
-	m.apply(opts)
-	doPrint(m)
-	return m
-}
-
-// Err logs a message based on an error value. The default
-// severity is error, but this can be overridden to a different
-// value with the WithSeverity() function.
-func Err(err error, opts ...func(*Message)) *Message {
-	m := &Message{
-		Timestamp:  time.Now(),
-		Severity:   SeverityError,
-		Text:       err.Error(),
-		StatusCode: http.StatusInternalServerError,
-	}
-	type t interface {
-		StatusCode() int
-	}
-	if e, ok := err.(t); ok {
-		m.StatusCode = e.StatusCode()
-	}
-	m.apply(opts)
-	doPrint(m)
-	return m
-}
-
-// Warn logs a warning severity message.
-func Warn(text string, opts ...func(*Message)) *Message {
-	m := &Message{
-		Timestamp:  time.Now(),
-		Severity:   SeverityError,
-		Text:       text,
-		StatusCode: http.StatusInternalServerError,
-	}
-	m.apply(opts)
-	doPrint(m)
-	return m
-}
-
-// Error logs an error severity message.
-func Error(text string, opts ...func(*Message)) *Message {
-	m := &Message{
-		Timestamp:  time.Now(),
-		Severity:   SeverityError,
-		Text:       text,
-		StatusCode: http.StatusInternalServerError,
-	}
-	m.apply(opts)
-	doPrint(m)
-	return m
 }

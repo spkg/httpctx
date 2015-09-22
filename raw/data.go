@@ -53,13 +53,13 @@ func (data *Data) ReadRequest(ctx context.Context, r *http.Request) error {
 			return log.Warn("invalid content-length",
 				log.WithValue("content-length", cl),
 				log.WithContext(ctx),
-				log.WithBadRequest())
+				log.WithStatusBadRequest())
 		}
 
 		if v >= int64(MaxLen) {
 			return log.Warn("max length excceeded",
 				log.WithContext(ctx),
-				log.WithBadRequest(),
+				log.WithStatusBadRequest(),
 				log.WithValue("MaxLen", MaxLen))
 		}
 
@@ -70,7 +70,7 @@ func (data *Data) ReadRequest(ctx context.Context, r *http.Request) error {
 			return log.Warn("cannot read content",
 				log.WithContext(ctx),
 				log.WithError(err),
-				log.WithBadRequest())
+				log.WithStatusBadRequest())
 		}
 		data.Content = buf
 	} else {
@@ -82,7 +82,7 @@ func (data *Data) ReadRequest(ctx context.Context, r *http.Request) error {
 		if len(content) >= MaxLen {
 			return log.Warn("max size exceeded",
 				log.WithContext(ctx),
-				log.WithBadRequest(),
+				log.WithStatusBadRequest(),
 				log.WithValue("MaxLen", MaxLen))
 		}
 		data.Content = content
@@ -119,7 +119,7 @@ func (data *Data) ReadResponse(ctx context.Context, r *http.Response) error {
 		if v >= int64(MaxLen) {
 			return log.Warn("max length excceeded",
 				log.WithContext(ctx),
-				log.WithBadRequest(),
+				log.WithStatusBadRequest(),
 				log.WithValue("MaxLen", MaxLen))
 		}
 
@@ -141,7 +141,7 @@ func (data *Data) ReadResponse(ctx context.Context, r *http.Response) error {
 		if len(content) >= MaxLen {
 			return log.Warn("max size exceeded",
 				log.WithContext(ctx),
-				log.WithBadRequest(),
+				log.WithStatusBadRequest(),
 				log.WithValue("MaxLen", MaxLen))
 		}
 		data.Content = content
