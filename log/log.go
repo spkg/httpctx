@@ -26,11 +26,12 @@ package log
 
 import (
 	"fmt"
-	"golang.org/x/net/context"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 const (
@@ -95,7 +96,7 @@ func (m *Message) Fprint(w io.Writer) {
 		}
 		fmt.Fprintf(w, "\n")
 	default:
-		fmt.Fprintf(w, "%s: %s\n", m.Severity, m.Text)
+		fmt.Fprintf(w, "%s %-5s %s\n", m.Timestamp.Format(timeFormat), m.Severity, m.Text)
 		for _, param := range parameters {
 			switch v := param.Value.(type) {
 			case string:
