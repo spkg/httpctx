@@ -13,7 +13,7 @@
 //
 // 2. Uses an api that allows for multiple options and parameters to be
 // logged in a single call. (See "Functional options for friendly APIs"
-// by Dave Cheney http://bit.ly/1x9WWPi).
+// by Dave Cheney http://goo.gl/l2KaW3).
 //
 // 3. When a message is logged, a non-nil *Message value is returned, which
 // can be returned as an error value.
@@ -30,8 +30,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 const (
@@ -67,13 +65,13 @@ func newMessage(severity Severity, text string) *Message {
 	return m
 }
 
-func (m *Message) applyOpt(opt func(*Message)) *Message {
+func (m *Message) applyOpt(opt Option) *Message {
 	opt(m)
 	return m
 }
 
 // applyOpts applies all of the option functions to the message.
-func (m *Message) applyOpts(opts []func(*Message)) *Message {
+func (m *Message) applyOpts(opts []Option) *Message {
 	for _, opt := range opts {
 		opt(m)
 	}
@@ -146,7 +144,7 @@ func (m *Message) Error() string {
 }
 
 // Debug logs a debug severity message.
-func Debug(text string, opts ...func(*Message)) *Message {
+func Debug(text string, opts ...Option) *Message {
 	m := newMessage(SeverityDebug, text)
 	m.applyOpts(opts)
 	doPrint(m)
@@ -154,7 +152,7 @@ func Debug(text string, opts ...func(*Message)) *Message {
 }
 
 // Info logs an info severity message.
-func Info(text string, opts ...func(*Message)) *Message {
+func Info(text string, opts ...Option) *Message {
 	m := newMessage(SeverityInfo, text)
 	m.applyOpts(opts)
 	doPrint(m)
@@ -162,7 +160,7 @@ func Info(text string, opts ...func(*Message)) *Message {
 }
 
 // Warn logs a warning severity message.
-func Warn(text string, opts ...func(*Message)) *Message {
+func Warn(text string, opts ...Option) *Message {
 	m := newMessage(SeverityWarning, text)
 	m.applyOpts(opts)
 	doPrint(m)
@@ -170,59 +168,9 @@ func Warn(text string, opts ...func(*Message)) *Message {
 }
 
 // Error logs an error severity message.
-func Error(text string, opts ...func(*Message)) *Message {
+func Error(text string, opts ...Option) *Message {
 	m := newMessage(SeverityError, text)
 	m.applyOpts(opts)
 	doPrint(m)
 	return m
-}
-
-// WithError sets the error associated with the log message.
-func WithError(err error) func(*Message) {
-	return func(m *Message) {
-		m.Err = err
-	}
-}
-
-// WithContext sets the context for the log message.
-func WithContext(ctx context.Context) func(*Message) {
-	return func(m *Message) {
-		for data := fromContext(ctx); data != nil; data = data.Prev {
-			m.Context = append(m.Context, Parameter{data.Name, data.Value})
-		}
-	}
-}
-
-// WithValue sets a parameter with a name and a value.
-func WithValue(name string, value interface{}) func(*Message) {
-	return func(m *Message) {
-		m.Parameters = append(m.Parameters, Parameter{name, value})
-	}
-}
-
-// WithSeverity sets the severity of the message. Useful for the Err function,
-// for which the default severity is error.
-func WithSeverity(s Severity) func(*Message) {
-	return func(m *Message) {
-		m.Severity = s
-	}
-}
-
-// WithStatusCode sets the HTTP status code associated with the log message.
-func WithStatusCode(code int) func(*Message) {
-	return func(m *Message) {
-		m.StatusCode = code
-	}
-}
-
-func WithStatusBadRequest() func(*Message) {
-	return func(m *Message) {
-		m.StatusCode = http.StatusBadRequest
-	}
-}
-
-func WithStatusUnauthorized() func(*Message) {
-	return func(m *Message) {
-		m.StatusCode = http.StatusUnauthorized
-	}
 }

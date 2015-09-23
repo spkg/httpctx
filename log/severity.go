@@ -13,9 +13,8 @@ type Severity int
 const (
 	SeverityDebug   Severity = iota // Debugging only
 	SeverityInfo                    // Informational
-	SeverityWarning                 // Warning that might be recoverable
-	SeverityError                   // Requires intervention
-	SeverityFatal                   // Program will terminate
+	SeverityWarning                 // Warning
+	SeverityError                   // Error condition
 )
 
 // MinSeverity is the minimum severity that will be logged.
@@ -39,8 +38,6 @@ func (s Severity) String() string {
 		return "warn"
 	case SeverityError:
 		return "error"
-	case SeverityFatal:
-		return "fatal"
 	}
 	return fmt.Sprintf("unknown %d", s)
 }
@@ -65,8 +62,6 @@ func (s *Severity) UnmarshalJSON(data []byte) error {
 		*s = SeverityWarning
 	case "error":
 		*s = SeverityError
-	case "fatal":
-		*s = SeverityFatal
 	default:
 		return errInvalidSeverity
 	}
