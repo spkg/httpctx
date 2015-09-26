@@ -6,6 +6,7 @@ package raw
 import (
 	"bytes"
 	"compress/flate"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -26,6 +27,7 @@ var MaxLen = 1024 * 1024 * 16
 const (
 	ceIdentity = "identity"
 	ceDeflate  = "deflate"
+	ceGzip     = "gzip"
 )
 
 // Represents a data BLOB that can be read from or written to
@@ -218,12 +220,19 @@ func (data *Data) Decompress() error {
 	if !data.IsCompressed() {
 		return nil
 	}
-	if data.ContentEncoding != ceDeflate {
+	input := bytes.NewBuffer(data.Content)
+	var reader io.Reader
+	if data.ContentEncoding == ceDeflate {
+		reader = flate.NewReader(input)
+	} else if data.ContentEncoding == ceGzip {
+		var err error
+		if reader, err = gzip.NewReader(input); err != nil {
+			return err
+		}
+	} else {
 		return log.Error("unknown content-encoding",
 			log.WithValue("content-encoding", data.ContentEncoding))
 	}
-	input := bytes.NewBuffer(data.Content)
-	reader := flate.NewReader(input)
 	writer := bytes.Buffer{}
 	_, err := io.Copy(&writer, reader)
 	if err != nil {
