@@ -28,10 +28,10 @@ func shouldSendJson(r *http.Request) bool {
 // error message.
 func sendError(w http.ResponseWriter, r *http.Request, err error) {
 	statusCode := http.StatusInternalServerError
-	type Error interface {
+	type ErrorWithStatusCode interface {
 		StatusCode() int
 	}
-	if errWithStatusCode, ok := err.(Error); ok {
+	if errWithStatusCode, ok := err.(ErrorWithStatusCode); ok {
 		if errWithStatusCode.StatusCode() != 0 {
 			statusCode = errWithStatusCode.StatusCode()
 		}
@@ -51,32 +51,34 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 	if shouldSendJson(r) {
 		var b []byte
 
-		// if the error object can marshal itself, let it do so
-		if _, ok := err.(json.Marshaler); ok {
-			b, _ = json.Marshal(err)
-		} else {
-			// the error object does not know how to marshal itself,
-			// so put the relevant information into a map and marshal
-			// that. The Result will look like:
-			// {"error":{"message":"message-here","code":"xyz123","status":400}}
-			resp := map[string]map[string]interface{}{
-				"error": {
-					"message": err.Error(),
-					"status":  statusCode,
-				},
-			}
-
-			if code != "" {
-				resp["error"]["code"] = code
-			}
-
-			b, _ = json.Marshal(resp)
+		// Put the relevant information into a map and marshal it.
+		// The Result will look like:
+		// {"error":{"message":"message-here","code":"xyz123","status":400}}
+		resp := map[string]map[string]interface{}{
+			"error": {
+				"message": err.Error(),
+				"status":  statusCode,
+			},
 		}
+		if code != "" {
+			resp["error"]["code"] = code
+		}
+
+		// If this does not succeed, then all we can do is to
+		// send back the status code to the client, but cannot
+		// send any payload.
+		b, err = json.Marshal(resp)
+		if err != nil {
+			b = nil
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Length", strconv.Itoa(len(b)))
 		w.WriteHeader(statusCode)
-		w.Write(b)
+		if b != nil {
+			w.Write(b)
+		}
 	} else {
 		http.Error(w, err.Error(), statusCode)
 	}
