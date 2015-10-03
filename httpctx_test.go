@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/spkg/httpctx"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"sp.com.au/exp/httpctx"
 )
 
 func Test1(t *testing.T) {

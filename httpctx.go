@@ -19,11 +19,12 @@
 // A simple middleware mechanism is also provided by this package. A middleware function
 // is one that accepts a httpctx.Handler as a parameter and returns a httpctx.Handler as
 // a result.
-package httpctx // import "sp.com.au/exp/httpctx"
+package httpctx
 
 import (
-	"golang.org/x/net/context"
 	"net/http"
+
+	"golang.org/x/net/context"
 )
 
 // NewContext creates a new context.Context for the HTTP request and

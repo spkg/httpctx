@@ -1,9 +1,10 @@
 package httpctx_test
 
 import (
-	"golang.org/x/net/context"
 	"net/http"
-	"sp.com.au/exp/httpctx"
+
+	"github.com/spkg/httpctx"
+	"golang.org/x/net/context"
 )
 
 func ExampleNewContext() {
