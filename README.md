@@ -1,6 +1,8 @@
 # Context-Aware HTTP Handlers
 
 [![GoDoc](https://godoc.org/github.com/spkg/httpctx?status.svg)](https://godoc.org/github.com/spkg/httpctx)
+[![Build Status](https://travis-ci.org/spkg/httpctx.svg?branch=master)](https://travis-ci.org/spkg/httpctx)
+
 
 The `httpctx` package provides a convenient way to handle HTTP requests
 using "context-aware" handler functions. Context-aware handlers
