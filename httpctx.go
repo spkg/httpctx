@@ -1,6 +1,6 @@
 // Package httpctx provides a convenient way to handle HTTP requests
 // using "context-aware" handler functions. The "context-aware" handler
-// functions are different to the standard http.Handler functions in two
+// functions are different from the standard http.Handler functions in two
 // important ways:
 //
 // 1. They accept an additional parameter of the (almost) standard type context.Context
@@ -18,7 +18,7 @@
 //
 // A simple middleware mechanism is also provided by this package. A middleware function
 // is one that accepts a httpctx.Handler as a parameter and returns a httpctx.Handler as
-// a result.
+// a result. (Thanks to Justinas Stankevičius for the idea for this. See github.com/justinas/alice).
 package httpctx
 
 import (
