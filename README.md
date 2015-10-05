@@ -3,6 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/spkg/httpctx?status.svg)](https://godoc.org/github.com/spkg/httpctx)
 [![Build Status](https://travis-ci.org/spkg/httpctx.svg?branch=master)](https://travis-ci.org/spkg/httpctx)
 [![License](http://img.shields.io/github/license/spkg/httpctx.svg)](https://github.com/spkg/httpctx/blob/master/license.txt)
+[![Coverage](http://gocover.io/_badge/github.com/spkg/httpctx)](http://gocover.io/github.com/spkg/httpctx)
 
 
 The `httpctx` package provides a convenient way to handle HTTP requests
