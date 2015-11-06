@@ -28,10 +28,9 @@ func shouldSendJson(r *http.Request) bool {
 // error message.
 func sendError(w http.ResponseWriter, r *http.Request, err error) {
 	statusCode := http.StatusInternalServerError
-	type ErrorWithStatusCode interface {
+	if errWithStatusCode, ok := err.(interface {
 		StatusCode() int
-	}
-	if errWithStatusCode, ok := err.(ErrorWithStatusCode); ok {
+	}); ok {
 		if errWithStatusCode.StatusCode() != 0 {
 			statusCode = errWithStatusCode.StatusCode()
 		}
@@ -41,7 +40,9 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 	type ErrorWithCode interface {
 		Code() string
 	}
-	if errWithCode, ok := err.(ErrorWithCode); ok {
+	if errWithCode, ok := err.(interface {
+		Code() string
+	}); ok {
 		code = errWithCode.Code()
 	}
 
