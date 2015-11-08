@@ -36,6 +36,9 @@ import (
 // Note that the caller must ensure that the cancel function is called
 // when the HTTP request is complete, or a goroutine leak could result.
 func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, context.CancelFunc) {
+	// TODO: the request r is not used in this function, and perhaps it should
+	// be removed. Is there any reason to keep it. A future version of Go might
+	// keep a context in the request object, so I'll keep it here for now.
 	var cancelFunc context.CancelFunc
 	if ctx == nil {
 		ctx = context.Background()
