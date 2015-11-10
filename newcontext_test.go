@@ -96,3 +96,10 @@ func TestNewContext_CancelFunc(t *testing.T) {
 	wg.Wait()
 	assert.True(finished)
 }
+
+func TestNewContext_WithNils(t *testing.T) {
+	assert := assert.New(t)
+	ctx, cancelFunc := httpctx.NewContext(nil, nil, nil)
+	assert.NotNil(ctx)
+	assert.NotNil(cancelFunc)
+}

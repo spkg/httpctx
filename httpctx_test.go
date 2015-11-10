@@ -36,10 +36,6 @@ func middleware2(f httpctx.Handler) httpctx.Handler {
 	})
 }
 
-func TestNewContext(t *testing.T) {
-	httpctx.NewContext(nil, nil, nil)
-}
-
 func TestHandler(t *testing.T) {
 	emptyFunc := func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		return nil
