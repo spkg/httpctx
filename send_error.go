@@ -9,7 +9,7 @@ import (
 
 // shouldSendJson decides whether it is appropriate to send a JSON
 // error response to the HTTP client.
-func shouldSendJson(r *http.Request) bool {
+func shouldSendJSON(r *http.Request) bool {
 	accept := r.Header.Get("Accept")
 
 	// TODO: this is a very weak interpretation of the
@@ -49,7 +49,7 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 	// remove headers that might have been set upstream
 	w.Header().Del("Content-Encoding")
 
-	if shouldSendJson(r) {
+	if shouldSendJSON(r) {
 		var b []byte
 
 		// Put the relevant information into a map and marshal it.

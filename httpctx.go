@@ -62,7 +62,7 @@ func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (co
 	return ctx, cancelFunc
 }
 
-// Objects implementing the Handler interface can be registered to serve
+// The Handler interface used for registering handlers that serve
 // a particular path or subtree in the HTTP server. If the ServeHTTPContext function
 // returns an error, it is returned to the client as a HTTP error code.
 type Handler interface {
@@ -98,6 +98,8 @@ func Handle(h Handler) http.Handler {
 	})
 }
 
+// HandleFunc returns a http.Handler (compatible with the standard library http package), which
+// calls the handler function f.
 func HandleFunc(f func(context.Context, http.ResponseWriter, *http.Request) error) http.Handler {
 	return Handle(HandlerFunc(f))
 }
@@ -145,6 +147,8 @@ func (s *Stack) Handle(h Handler) http.Handler {
 	return Handle(h)
 }
 
+// HandleFunc returns a http.Handler (compatible with the standard library http package), which
+// calls the middleware handlers in the stack s, followed by  the handler function f.
 func (s *Stack) HandleFunc(f func(context.Context, http.ResponseWriter, *http.Request) error) http.Handler {
 	return s.Handle(HandlerFunc(f))
 }
