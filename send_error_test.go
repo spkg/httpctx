@@ -19,7 +19,7 @@ func TestShouldSendJSON(t *testing.T) {
 		{"application/json", "", true},
 		{"application/json", "/api/", true},
 	} {
-		got := shouldSendJson(&http.Request{
+		got := shouldSendJSON(&http.Request{
 			URL:    &url.URL{Path: tc.Path},
 			Header: http.Header(map[string][]string{"Accept": {tc.Accept}}),
 		})
