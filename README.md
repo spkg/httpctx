@@ -5,9 +5,7 @@
 [![Build status (Windows)](https://ci.appveyor.com/api/projects/status/ml1i0l55x0lkw8u6?svg=true)](https://ci.appveyor.com/project/jjeffery/httpctx)
 [![license](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://raw.githubusercontent.com/spkg/httpctx/master/license.txt)
 [![Coverage](http://gocover.io/_badge/github.com/spkg/httpctx)](http://gocover.io/github.com/spkg/httpctx)
-
-
-
+[![GoReportCard](http://goreportcard.com/badge/spkg/httpctx)](http://goreportcard.com/report/spkg/httpctx)
 
 The `httpctx` package provides a convenient way to handle HTTP requests
 using "context-aware" handler functions. Context-aware handlers
