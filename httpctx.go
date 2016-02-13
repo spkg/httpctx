@@ -48,9 +48,14 @@ func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (co
 	ctx, cancelFunc = context.WithCancel(ctx)
 
 	if closeNotifier, ok := w.(http.CloseNotifier); ok {
+        // need to acquire the channel prior to entering
+        // the go-routine, otherwise CloseNotify could be
+        // called after the request is finished, which
+        // results in a panic
+        closeChan := closeNotifier.CloseNotify()
 		go func() {
 			select {
-			case <-closeNotifier.CloseNotify():
+			case <-closeChan:
 				cancelFunc()
 				return
 			case <-ctx.Done():
