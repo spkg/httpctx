@@ -34,16 +34,23 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 		if errWithStatusCode.StatusCode() != 0 {
 			statusCode = errWithStatusCode.StatusCode()
 		}
+	} else if errWithStatus, ok := err.(interface {
+		Status() int
+	}); ok {
+		if errWithStatus.Status() != 0 {
+			statusCode = errWithStatus.Status()
+		}
 	}
 
-	var code string
-	type ErrorWithCode interface {
-		Code() string
-	}
-	if errWithCode, ok := err.(interface {
+	var errorCode string
+	if errWithErrorCode, ok := err.(interface {
+		ErrorCode() string
+	}); ok {
+		errorCode = errWithErrorCode.ErrorCode()
+	} else if errWithCode, ok := err.(interface {
 		Code() string
 	}); ok {
-		code = errWithCode.Code()
+		errorCode = errWithCode.Code()
 	}
 
 	// remove headers that might have been set upstream
@@ -61,8 +68,8 @@ func sendError(w http.ResponseWriter, r *http.Request, err error) {
 				"status":  statusCode,
 			},
 		}
-		if code != "" {
-			resp["error"]["code"] = code
+		if errorCode != "" {
+			resp["error"]["code"] = errorCode
 		}
 
 		// If this does not succeed, then all we can do is to
