@@ -27,7 +27,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-// NewContext creates a new context.Context for the HTTP request and
+// newContext creates a new context.Context for the HTTP request and
 // a cancel function to call when the HTTP request is finished. The context's
 // Done channel will be closed if the HTTP client closes the connection
 // while the request is being processed. (This feature relies on w implementing
@@ -35,10 +35,10 @@ import (
 //
 // Note that the caller must ensure that the cancel function is called
 // when the HTTP request is complete, or a goroutine leak could result.
-func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, context.CancelFunc) {
+func newContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, context.CancelFunc) {
 	// TODO: the request r is not used in this function, and perhaps it should
 	// be removed. Is there any reason to keep it. A future version of Go might
-	// keep a context in the request object, so I'll keep it here for now.
+	// keep a context in the request object, so it is kept here for now.
 	var cancelFunc context.CancelFunc
 	if ctx == nil {
 		ctx = context.Background()
@@ -48,11 +48,11 @@ func NewContext(ctx context.Context, w http.ResponseWriter, r *http.Request) (co
 	ctx, cancelFunc = context.WithCancel(ctx)
 
 	if closeNotifier, ok := w.(http.CloseNotifier); ok {
-        // need to acquire the channel prior to entering
-        // the go-routine, otherwise CloseNotify could be
-        // called after the request is finished, which
-        // results in a panic
-        closeChan := closeNotifier.CloseNotify()
+		// need to acquire the channel prior to entering
+		// the go-routine, otherwise CloseNotify could be
+		// called after the request is finished, which
+		// results in a panic
+		closeChan := closeNotifier.CloseNotify()
 		go func() {
 			select {
 			case <-closeChan:
@@ -94,9 +94,11 @@ type Stack struct {
 // Handle converts a httpctx.Handler into a http.Handler.
 func Handle(h Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancelFunc := NewContext(context.Background(), w, r)
-		defer cancelFunc()
-		err := h.ServeHTTPContext(ctx, w, r)
+		// Note that if the handler h has been created using a stack (ie Context
+		// or Use functions), the first middleware in the stack will replace the context.
+		// Pass the background context here just in case h has been constructed a
+		// different way, but this will be rare.
+		err := h.ServeHTTPContext(context.Background(), w, r)
 		if err != nil {
 			sendError(w, r, err)
 		}
@@ -109,9 +111,32 @@ func HandleFunc(f func(context.Context, http.ResponseWriter, *http.Request) erro
 	return Handle(HandlerFunc(f))
 }
 
+// Context returns a middleware stack that applies the context to any
+// handlers added to the stack. This is useful when the main program creates a
+// context that should be used as the base context for all HTTP handlers.
+func Context(ctx context.Context) *Stack {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	// Create middleware that ignores the supplied context, and sets up a
+	// context based on ctx that cancels if the request cancels.
+	m := func(h Handler) Handler {
+		return HandlerFunc(func(_ context.Context, w http.ResponseWriter, r *http.Request) error {
+			var cancel func()
+			ctx, cancel = newContext(ctx, w, r)
+			defer cancel()
+			return h.ServeHTTPContext(ctx, w, r)
+		})
+	}
+	return &Stack{
+		middleware: m,
+		previous:   nil,
+	}
+}
+
 // Use creates a Stack of middleware functions.
 func Use(f ...func(h Handler) Handler) *Stack {
-	var stack *Stack
+	var stack = Context(context.Background())
 
 	for _, m := range f {
 		if m != nil {

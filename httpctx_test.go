@@ -45,6 +45,7 @@ func TestHandler(t *testing.T) {
 	}{
 		{httpctx.HandleFunc(emptyFunc)},
 		{httpctx.Use(middleware1).Use(middleware2).HandleFunc(emptyFunc)},
+		{httpctx.Context(context.TODO()).Use(middleware2).HandleFunc(emptyFunc)},
 	} {
 		srv := httptest.NewServer(tc.Handler)
 		resp, err := http.Get(srv.URL)
