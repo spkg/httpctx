@@ -1,11 +1,10 @@
-package httpctx_test
+package httpctx
 
 import (
 	"net/http"
 	"sync"
 	"testing"
 
-	"github.com/spkg/httpctx"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
@@ -46,7 +45,7 @@ func TestNewContext_CloseNotifier(t *testing.T) {
 	fr := &http.Request{}
 	ctx := context.Background()
 
-	ctx, cancelFunc := httpctx.NewContext(ctx, fw, fr)
+	ctx, cancelFunc := newContext(ctx, fw, fr)
 	defer cancelFunc()
 
 	var wg sync.WaitGroup
@@ -69,7 +68,7 @@ func TestNewContext_CancelFunc(t *testing.T) {
 	fr := &http.Request{}
 	ctx := context.Background()
 
-	ctx, cancelFunc := httpctx.NewContext(ctx, fw, fr)
+	ctx, cancelFunc := newContext(ctx, fw, fr)
 
 	var wg sync.WaitGroup
 	finished := false
@@ -87,7 +86,7 @@ func TestNewContext_CancelFunc(t *testing.T) {
 
 func TestNewContext_WithNils(t *testing.T) {
 	assert := assert.New(t)
-	ctx, cancelFunc := httpctx.NewContext(nil, nil, nil)
+	ctx, cancelFunc := newContext(nil, nil, nil)
 	assert.NotNil(ctx)
 	assert.NotNil(cancelFunc)
 }

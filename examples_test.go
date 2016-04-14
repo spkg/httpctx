@@ -34,15 +34,3 @@ func makeNewContext(ctx context.Context) context.Context {
 	ctx = context.WithValue(ctx, "some-key", "some-value")
 	return ctx
 }
-
-func ExampleNewContext() {
-
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancelFunc := httpctx.NewContext(context.Background(), w, r)
-		defer cancelFunc()
-		doSomethingWith(ctx, w, r)
-	}
-
-	http.HandleFunc("/", handler)
-	http.ListenAndServe(":8080", nil)
-}
