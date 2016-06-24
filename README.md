@@ -6,6 +6,8 @@
 [![license](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://raw.githubusercontent.com/spkg/httpctx/master/license.txt)
 [![GoReportCard](https://goreportcard.com/badge/github.com/spkg/httpctx)](https://goreportcard.com/report/github.com/spkg/httpctx)
 
+*Note:* Go 1.7 includs the `context` package in the standard library, and the `net/http` package includes a  `Context` in the `http.Request` structure. If you are targeting Go 1.7 and later, there is significantly less need for a package like `httpctx`.
+
 The `httpctx` package provides a convenient way to handle HTTP requests
 using "context-aware" handler functions. Context-aware handlers
 are different from the standard `http.Handler` in two important ways:
