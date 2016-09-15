@@ -22,9 +22,8 @@
 package httpctx
 
 import (
+	"context"
 	"net/http"
-
-	"golang.org/x/net/context"
 )
 
 // newContext creates a new context.Context for the HTTP request and

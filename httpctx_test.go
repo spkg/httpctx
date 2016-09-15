@@ -1,13 +1,13 @@
 package httpctx_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/spkg/httpctx"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 func Test1(t *testing.T) {

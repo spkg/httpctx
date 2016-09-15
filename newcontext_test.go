@@ -1,12 +1,12 @@
 package httpctx
 
 import (
+	"context"
 	"net/http"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 func doSomethingWith(ctx context.Context, w http.ResponseWriter, r *http.Request) {
