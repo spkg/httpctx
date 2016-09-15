@@ -123,9 +123,10 @@ func Context(ctx context.Context) *Stack {
 	m := func(h Handler) Handler {
 		return HandlerFunc(func(_ context.Context, w http.ResponseWriter, r *http.Request) error {
 			var cancel func()
-			ctx, cancel = newContext(ctx, w, r)
+			var requestCtx context.Context
+			requestCtx, cancel = newContext(ctx, w, r)
 			defer cancel()
-			return h.ServeHTTPContext(ctx, w, r)
+			return h.ServeHTTPContext(requestCtx, w, r)
 		})
 	}
 	return &Stack{
